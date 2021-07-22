@@ -14,8 +14,8 @@ param changeTrackingBool bool = false
 param containerInsightsBool bool = false
 param appInsightsBool bool = false
 param resourceTags object = {
-  Environment: 'Blog'
-  Project: 'CloudSMA'
+  Environment: 'sparktest'
+  Project: 'Orchestrator'
 }
 
 var AAlocation = {

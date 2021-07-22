@@ -1,5 +1,4 @@
 param workspaceName string = 'la-blog-eastus2-cloudsma'
-param location string = resourceGroup().location
 param syslogName string = 'kern'
 param severityLevel array = [
   'emerg'
@@ -13,9 +12,8 @@ param severityLevel array = [
 ]
 
 
-resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
+resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' existing = {
   name: workspaceName
-  location: location
 }
 
 resource workspaceName_Syslog 'Microsoft.OperationalInsights/workspaces/datasources@2020-08-01' = {

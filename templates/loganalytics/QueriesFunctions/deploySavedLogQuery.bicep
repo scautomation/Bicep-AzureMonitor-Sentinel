@@ -1,10 +1,9 @@
-param workspaceName string = 'la-blog-eastus2-cloudsma'
+param workspaceName string
 param location string = resourceGroup().location
 
 
-resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
+resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' existing = {
   name: workspaceName
-  location: location
 }
 
 resource workspaceName_Usage 'Microsoft.OperationalInsights/workspaces/savedSearches@2015-03-20' = {

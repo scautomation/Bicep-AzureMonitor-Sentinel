@@ -7,17 +7,17 @@ param eventLevel array = [
   'Information'
 ]
 
-var deploymentName = '${workspaceName_resource.name}/${uniqueString(subscription().subscriptionId, deployment().name)}'
+var deploymentName = '${workspace.name}/${uniqueString(subscription().subscriptionId, deployment().name)}'
 
-resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
+resource workspace 'Microsoft.OperationalInsights/workspaces@2020-08-01' existing = {
   name: workspaceName
-  location: location
 }
 
 resource workspaceName_deploymentName 'Microsoft.OperationalInsights/workspaces/datasources@2020-08-01' = {
   name: deploymentName
   kind: 'WindowsEvent'
   properties: {
+    workspaceId: workspace.id
     eventLogName: eventLogName
     eventTypes: [for Level in eventLevel: {
         eventType: Level

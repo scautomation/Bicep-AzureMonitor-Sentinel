@@ -1,5 +1,4 @@
 param workspaceName string = 'la-blog-eastus2-cloudsma'
-param metricLocation string = resourceGroup().location
 @allowed([
   'WindowsPerformanceCounter'
   'LinuxPerformanceObject'
@@ -12,9 +11,8 @@ param metricCounterName string = '% Processor Time'
 
 var metricDeploymentName = '${workspaceName_resource.name}/${uniqueString(subscription().subscriptionId, deployment().name)}'
 
-resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
+resource workspaceName_resource 'Microsoft.OperationalInsights/workspaces@2020-08-01' existing = {
   name: workspaceName
-  location: metricLocation
 }
 
 
