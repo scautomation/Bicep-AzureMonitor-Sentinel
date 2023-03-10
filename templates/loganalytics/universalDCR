@@ -1,0 +1,121 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataCollectionRule_name": {
+            "type": "String"
+        },
+        "workspaceResourceId": {
+            "type": "String"
+        },
+        "workspaceName": {
+            "type": "String"
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String"
+        },
+        "kind": {
+            "type": "String"
+        },
+        "perfStream": {
+            "type": "String",
+            "defaultValue": ""
+        },
+        "perfCounters": {
+            "type": "Array",
+            "defaultValue": []
+        },
+        "perfSample": {
+            "type": "Int",
+            "defaultValue": 0
+        },
+        "eventLogStream": {
+            "type": "String",
+            "defaultValue": ""
+        },
+        "eventLogs": {
+            "type": "Array",
+            "defaultValue": []
+        },
+        "syslogFacilities":{
+            "type": "Array",
+            "defaultValue": []
+        },
+        "syslogLevels": {
+            "type": "Array",
+            "defaultValue": []
+        },
+        "syslogStream": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "kindVar" : "[if(equals(parameters('kind'), 'Windows'), 'Windows', 'Linux')]",
+        "eventLogVar": [
+            {
+                "streams":[
+                    "[parameters('eventLogStream')]"
+                ],
+                "xPathQueries": "[parameters('eventLogs')]",
+                "name": "[concat('event',parameters('dataCollectionRule_name'), uniqueString(resourceGroup().id) )]"
+            }
+        ],
+        "perfVar" :[
+            {
+                "streams": [
+                    "[parameters('perfStream')]"
+                ],
+                "samplingFrequencyInSeconds": "[parameters('perfSample')]",
+                "counterSpecifiers": "[parameters('perfCounters')]",
+                "name": "[concat('perf',parameters('dataCollectionRule_name'), uniqueString(resourceGroup().id) )]"
+            }
+        ],
+        "syslogVar": [
+            {
+                "streams": [
+                    "[parameters('syslogStream')]"
+                ],
+                    "facilityNames": "[parameters('syslogFacilities')]",
+                    "logLevels": "[parameters('syslogLevels')]",
+                    "name": "[concat('syslog',parameters('dataCollectionRule_name'), uniqueString(resourceGroup().id) )]"
+            }
+        ],
+        "streamsVar" : "[concat(parameters('perfStream'),parameters('eventLogStream'),parameters('syslogStream'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Insights/dataCollectionRules",
+            "apiVersion": "2021-09-01-preview",
+            "name": "[parameters('dataCollectionRule_name')]",
+            "location": "[parameters('location')]",
+            "kind": "[variables('kindVar')]",
+            "properties": {
+                "dataSources": {
+                    "performanceCounters": "[if(empty(parameters('perfStream')), null(), variables('perfVar'))]",
+                    "windowsEventLogs":"[if(empty(parameters('eventLogStream')), null(), variables('eventLogVar'))]",
+                    "syslog":"[if(empty(parameters('sysLogStream')), null(), variables('syslogVar'))]"
+                },
+                "destinations": {
+                    "logAnalytics": [
+                        {
+                            "workspaceResourceId": "[parameters('workspaceResourceId')]",
+                            "name": "[parameters('workspaceName')]"
+                        }
+                    ]
+                },
+                "dataFlows": [
+                    {
+                        "streams": [
+                            "[variables('streamsVar')]"
+                            ],
+                        "destinations": [
+                            "[parameters('workspaceName')]"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
