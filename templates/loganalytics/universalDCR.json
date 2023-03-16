@@ -18,9 +18,8 @@
         "kind": {
             "type": "String"
         },
-        "perfStream": {
-            "type": "String",
-            "defaultValue": ""
+        "streams": {
+            "type": "Array"
         },
         "perfCounters": {
             "type": "Array",
@@ -29,10 +28,6 @@
         "perfSample": {
             "type": "Int",
             "defaultValue": 0
-        },
-        "eventLogStream": {
-            "type": "String",
-            "defaultValue": ""
         },
         "eventLogs": {
             "type": "Array",
@@ -45,18 +40,13 @@
         "syslogLevels": {
             "type": "Array",
             "defaultValue": []
-        },
-        "syslogStream": {
-            "type": "string",
-            "defaultValue": ""
         }
     },
     "variables": {
-        "kindVar" : "[if(equals(parameters('kind'), 'Windows'), 'Windows', 'Linux')]",
         "eventLogVar": [
             {
                 "streams":[
-                    "[parameters('eventLogStream')]"
+                    "Microsoft-Event"
                 ],
                 "xPathQueries": "[parameters('eventLogs')]",
                 "name": "[concat('event',parameters('dataCollectionRule_name'), uniqueString(resourceGroup().id) )]"
@@ -65,7 +55,7 @@
         "perfVar" :[
             {
                 "streams": [
-                    "[parameters('perfStream')]"
+                    "Microsoft-Perf"
                 ],
                 "samplingFrequencyInSeconds": "[parameters('perfSample')]",
                 "counterSpecifiers": "[parameters('perfCounters')]",
@@ -75,14 +65,13 @@
         "syslogVar": [
             {
                 "streams": [
-                    "[parameters('syslogStream')]"
+                    "Microsoft-Syslog"
                 ],
                     "facilityNames": "[parameters('syslogFacilities')]",
                     "logLevels": "[parameters('syslogLevels')]",
                     "name": "[concat('syslog',parameters('dataCollectionRule_name'), uniqueString(resourceGroup().id) )]"
             }
-        ],
-        "streamsVar" : "[concat(parameters('perfStream'),parameters('eventLogStream'),parameters('syslogStream'))]"
+        ]
     },
     "resources": [
         {
@@ -90,12 +79,12 @@
             "apiVersion": "2021-09-01-preview",
             "name": "[parameters('dataCollectionRule_name')]",
             "location": "[parameters('location')]",
-            "kind": "[variables('kindVar')]",
+            "kind": "[parameters('kind')]",
             "properties": {
                 "dataSources": {
-                    "performanceCounters": "[if(empty(parameters('perfStream')), null(), variables('perfVar'))]",
-                    "windowsEventLogs":"[if(empty(parameters('eventLogStream')), null(), variables('eventLogVar'))]",
-                    "syslog":"[if(empty(parameters('sysLogStream')), null(), variables('syslogVar'))]"
+                    "performanceCounters": "[if(empty(parameters('perfCounters')), null(), variables('perfVar'))]",
+                    "windowsEventLogs":"[if(empty(parameters('eventLogs')), null(), variables('eventLogVar'))]",
+                    "syslog":"[if(empty(parameters('syslogFacilities')), null(), variables('syslogVar'))]"
                 },
                 "destinations": {
                     "logAnalytics": [
@@ -107,9 +96,7 @@
                 },
                 "dataFlows": [
                     {
-                        "streams": [
-                            "[variables('streamsVar')]"
-                            ],
+                        "streams": "[parameters('streams')]",
                         "destinations": [
                             "[parameters('workspaceName')]"
                         ]
